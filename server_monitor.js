@@ -119,68 +119,6 @@ app.get("/system", (req, res) => {
     });
 });
 
-/*
-app.get("/interfaces", async (req, res) => {
-    const ip = monitoredDevices[0].ip;
-    const community = monitoredDevices[0].community;
-    const session = createSession(ip, community);
-    const oidName = "1.3.6.1.2.1.2.2.1.2";  // ifDescr
-    const oidStatus = "1.3.6.1.2.1.2.2.1.8"; // ifOperStatus
-
-    try {
-        const [nameVarbinds, statusVarbinds] = await Promise.all([
-            getSubtree(session, oidName),
-            getSubtree(session, oidStatus)
-        ]);
-
-        let interfaces = {};
-        nameVarbinds.forEach((vb) => {
-            const id = vb.oid.split(".").pop();
-            if (!interfaces[id]) interfaces[id] = {};
-            interfaces[id].name = vb.value.toString();
-        });
-
-        statusVarbinds.forEach((vb) => {
-            const id = vb.oid.split(".").pop();
-            if (!interfaces[id]) interfaces[id] = {};
-            interfaces[id].status = parseInt(vb.value) === 1 ? "UP" : "DOWN";
-        });
-
-        const result = Object.keys(interfaces).map(id => ({
-            id,
-            name: interfaces[id].name,
-            status: interfaces[id].status
-        }));
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.toString() });
-    } finally {
-        session.close();
-    }
-});*/
-/*
-app.get("/interface/:id", (req, res) => {
-    const id = req.params.id;
-    const ip = monitoredDevices[0].ip;
-    const community = monitoredDevices[0].community;
-    const oids = [
-        `1.3.6.1.2.1.2.2.1.2.${id}`, // ifDescr
-        `1.3.6.1.2.1.2.2.1.8.${id}`, // ifOperStatus
-        `1.3.6.1.2.1.2.2.1.5.${id}`  // ifSpeed
-    ];
-    const session = createSession(ip, community);
-    session.get(oids, (error, varbinds) => {
-        session.close();
-        if (error) return res.status(500).json({ error: error.toString() });
-        res.json({
-            id,
-            name: varbinds[0].value.toString(),
-            status: varbinds[1].value === 1 ? "up" : "down",
-            speed: `${varbinds[2].value / 1_000_000} Mbps`
-        });
-    });
-});
-*/
 
 
 const OIDS = {
@@ -206,45 +144,6 @@ function snmpWalk(ip, community, oid) {
         });
     });
 }
-
-/*
-app.get("/interfaces", async (req, res) => {
-    try {
-        const [ifDescr, ifOperStatus, ipAdEntIfIndex, ipAdEntAddr] = await Promise.all([
-            snmpWalk(device.ip, device.community, OIDS.ifDescr),
-            snmpWalk(device.ip, device.community, OIDS.ifOperStatus),
-            snmpWalk(device.ip, device.community, OIDS.ipAdEntIfIndex),
-            snmpWalk(device.ip, device.community, OIDS.ipAdEntAddr)
-        ]);
-
-        // Montar tabela IP -> InterfaceIndex
-        const ipMap = {};
-        for (const [oid, ifIndex] of Object.entries(ipAdEntIfIndex)) {
-            const ip = oid.split(".").slice(-4).join(".");
-            ipMap[ifIndex] = ip;
-        }
-
-        // Montar resposta final
-        const interfaces = [];
-        for (const [oid, name] of Object.entries(ifDescr)) {
-            const ifIndex = oid.split(".").pop();
-            interfaces.push({
-                name,
-                ip: ipMap[ifIndex] || null,
-                status: ifOperStatus[`${OIDS.ifOperStatus}.${ifIndex}`] === "1" ? "up" : "down"
-            });
-        }
-
-        res.json(interfaces);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});*/
-
-
-
-
-
 
 
 
