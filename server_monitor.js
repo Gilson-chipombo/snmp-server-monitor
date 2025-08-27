@@ -147,7 +147,7 @@ function snmpWalk(ip, community, oid) {
 
 
 
-setInterval(async () => {
+setInterval(async () => {clear
     console.log("Coletando dados SNMP...");
     for (const device of monitoredDevices) {
         try {

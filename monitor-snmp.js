@@ -27,7 +27,7 @@ function createSession(ip, community) {
     });
 }
 
-// Função auxiliar para converter valores SNMP de forma segura
+
 function safeSnmpValue(value, type) {
     if (Buffer.isBuffer(value)) {
         return value.toString("utf8"); // Converte Buffer para string UTF-8
@@ -40,7 +40,6 @@ function safeSnmpValue(value, type) {
     }
 }
 
-// Função SNMP Get (para OIDs específicos)
 function getSnmpData(ip, community, oids) {
     return new Promise((resolve, reject) => {
         const session = createSession(ip, community);
@@ -65,7 +64,6 @@ function getSnmpData(ip, community, oids) {
     });
 }
 
-// Função SNMP Walk
 function snmpWalk(ip, community, oid) {
     return new Promise((resolve, reject) => {
         const session = createSession(ip, community);
@@ -110,7 +108,7 @@ function extractIpFromOid(oid, baseOid) {
     return null;
 }
 
-// Rota que retorna todas as interfaces + IP + estado
+
 app.get("/interfaces", async (req, res) => {
     try {
         // Assumindo ifIndex de 1 a 20 com base na saída fornecida
@@ -201,13 +199,12 @@ app.get("/interfaces", async (req, res) => {
     }
 });
 
-// Rota para obter detalhes de uma interface específica
 app.get("/interface/:id", async (req, res) => {
     const { id } = req.params;
     const oids = [
-        `${OIDS.ifDescr}.${id}`,      // Nome da interface
-        `${OIDS.ifOperStatus}.${id}`, // Estado da interface
-        `${OIDS.ifSpeed}.${id}`       // Velocidade da interface
+        `${OIDS.ifDescr}.${id}`,      
+        `${OIDS.ifOperStatus}.${id}`, 
+        `${OIDS.ifSpeed}.${id}`
     ];
 
     try {
@@ -269,6 +266,88 @@ app.get("/interface/:id", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+app.get("/system", (req, res) => {
+    const ip = monitoredDevices[0].ip;
+    const community = monitoredDevices[0].community;
+    const oids = [
+        "1.3.6.1.2.1.1.1.0", // sysDescr
+        "1.3.6.1.2.1.1.3.0"  // sysUpTime
+    ];
+    const session = createSession(ip, community);
+    session.get(oids, (error, varbinds) => {
+        session.close();
+        if (error) return res.status(500).json({ error: error.toString() });
+        res.json({
+            description: varbinds[0].value.toString(),
+            uptime: formatUptime(varbinds[1].value)
+        });
+    });
+});
+
+
+const monitoredDevices = [
+    {
+        ip: "192.168.220.134",
+        community: "public",
+        oids: [
+           "1.3.6.1.2.1.1.1.0", // sysDescr
+            "1.3.6.1.2.1.1.3.0", // sysUpTime
+            "1.3.6.1.4.1.9.2.1.56.0", // CPU 5 sec
+            "1.3.6.1.4.1.9.2.1.58.0", // CPU 5 min
+            "1.3.6.1.4.1.9.2.1.8.0",  // Memória livre
+            "1.3.6.1.4.1.9.2.1.9.0",  // Memória usada
+            "1.3.6.1.2.1.2.2.1.8.2"   // ifOperStatus (Interface 2)
+        ]
+    },
+    {
+        ip: "192.168.10.1",
+        community: "public",
+        oids: [
+           "1.3.6.1.2.1.1.1.0", // sysDescr
+            "1.3.6.1.2.1.1.3.0", // sysUpTime
+            "1.3.6.1.4.1.9.2.1.58.0", // CPU 5 min
+            "1.3.6.1.4.1.9.2.1.8.0",  // Memória livre
+            "1.3.6.1.4.1.9.2.1.9.0",  // Memória usada
+            "1.3.6.1.2.1.2.2.1.8.2"   // ifOperStatus (Interface 2)
+            
+        ]
+    },
+    {
+        ip: "192.168.20.1",
+        community: "public",
+        oids: [
+            "1.3.6.1.2.1.1.1.0", // sysDescr
+            "1.3.6.1.2.1.1.3.0", // sysUpTime
+            "1.3.6.1.4.1.9.2.1.58.0", // CPU 5 min
+            "1.3.6.1.4.1.9.2.1.8.0",  // Memória livre
+            "1.3.6.1.4.1.9.2.1.9.0",  // Memória usada
+            "1.3.6.1.2.1.2.2.1.8.2"   // ifOperStatus (Interface 2)
+        ]
+    }
+];
+
+setInterval(async () => {clear
+    console.log("Coletando dados SNMP...");
+    for (const device of monitoredDevices) {
+        try {
+            const data = await getSnmpData(device.ip, device.community, device.oids);
+            monitorData.push({
+                timestamp: new Date(),
+                ip: device.ip,
+                data
+            });
+        } catch (err) {
+            console.error(`Erro no rotador  R4 ${device.ip}: port DOWN`, err.message);
+        }
+    }
+}, 1000);
+
+app.get("/monitor", (req, res) => {
+    res.json(monitorData);
+});
+
+
 
 app.listen(5000, () => {
     console.log("API rodando em http://localhost:5000");
