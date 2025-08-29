@@ -86,7 +86,7 @@ const monitoredDevices = [
         ]
     }
 ];
-
+/*
 app.post("/snmp", async (req, res) => {
     const { ip, community, oids } = req.body;
     if (!ip || !community || !oids) {
@@ -99,8 +99,8 @@ app.post("/snmp", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-
+*/
+/*
 app.get("/system", (req, res) => {
     const ip = monitoredDevices[0].ip;
     const community = monitoredDevices[0].community;
@@ -118,6 +118,7 @@ app.get("/system", (req, res) => {
         });
     });
 });
+*/
 
 
 
@@ -147,7 +148,7 @@ function snmpWalk(ip, community, oid) {
 
 
 
-setInterval(async () => {clear
+setInterval(async () => {
     console.log("Coletando dados SNMP...");
     for (const device of monitoredDevices) {
         try {

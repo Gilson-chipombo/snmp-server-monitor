@@ -16,10 +16,9 @@ const OIDS = {
     atIfIndex: "1.3.6.1.2.1.3.1.1.3"        // Tabela ARP
 };
 
-// IPs conhecidos como fallback
+
 const FALLBACK_IPS = ["42.42.42.1", "42.42.42.2", "192.168.10.1", "192.168.20.1"];
 
-// Função para criar sessão SNMP com opções de timeout
 function createSession(ip, community) {
     return snmp.createSession(ip, community, {
         timeout: 30000, // 30 segundos de timeout
@@ -30,13 +29,13 @@ function createSession(ip, community) {
 
 function safeSnmpValue(value, type) {
     if (Buffer.isBuffer(value)) {
-        return value.toString("utf8"); // Converte Buffer para string UTF-8
+        return value.toString("utf8");
     } else if (typeof value === "number" || type === 2 || type === 64) {
-        return value.toString(); // Converte número ou tipos INTEGER/IpAddress
+        return value.toString(); 
     } else if (value === null || value === undefined) {
         return "N/A"; // Trata valores nulos ou indefinidos
     } else {
-        return value.toString(); // Outros tipos
+        return value.toString();
     }
 }
 
@@ -327,7 +326,8 @@ const monitoredDevices = [
     }
 ];
 
-setInterval(async () => {clear
+
+setInterval(async () => {
     console.log("Coletando dados SNMP...");
     for (const device of monitoredDevices) {
         try {
